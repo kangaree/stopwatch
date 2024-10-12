@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Stopwatch</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .stopwatch {
+            background: white;
+            border: 10px solid #333;
+            border-radius: 50%;
+            width: 300px;
+            height: 300px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .dial {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .hand {
+            position: absolute;
+            background: #333;
+            transform-origin: bottom;
+            bottom: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .minute {
+            width: 4px;
+            height: 90px;
+            background: #666;
+            z-index: 2;
+        }
+
+        .second {
+            width: 2px;
+            height: 100px;
+            background: red;
+            z-index: 1;
+        }
+
+        .tick {
+            position: absolute;
+            background: #333;
+            width: 2px;
+            height: 10px;
+            bottom: 50%; /* Position at the outer edge */
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            transform-origin: bottom;
+        }
+
+        .big-tick {
+            height: 20px; /* Larger for 5-second intervals */
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        .laps {
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="stopwatch">
+        <div class="dial">
+            <div class="hand minute" id="minuteHand"></div>
+            <div class="hand second" id="secondHand"></div>
+
+            <!-- Tick Marks -->
+            <script>
+                const dial = document.querySelector('.dial');
+                for (let i = 0; i < 60; i++) {
+                    const tick = document.createElement('div');
+                    tick.className = 'tick';
+                    tick.style.transform = `translateX(-50%) rotate(${i * 6}deg) translateY(-140px)`; // Position at the outer edge
+                    if (i % 5 === 0) {
+                        tick.classList.add('big-tick');
+                    }
+                    dial.appendChild(tick);
+                }
+            </script>
+        </div>
+        <div class="controls">
+            <button id="startStopBtn">Start</button>
+            <button id="lapBtn">Lap</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+        <div class="laps" id="laps"></div>
+    </div>
+    <script>
+        let totalMilliseconds = 0;
+        let isRunning = false;
+        let startTime;
+
+        const minuteHand = document.getElementById('minuteHand');
+        const secondHand = document.getElementById('secondHand');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const lapsDiv = document.getElementById('laps');
+
+        startStopBtn.addEventListener('click', () => {
+            if (isRunning) {
+                isRunning = false;
+                startStopBtn.textContent = 'Start';
+            } else {
+                isRunning = true;
+                startStopBtn.textContent = 'Stop';
+                startTime = performance.now() - totalMilliseconds; // Adjust start time for continuity
+                requestAnimationFrame(updateStopwatch);
+            }
+        });
+
+        lapBtn.addEventListener('click', () => {
+            if (isRunning) {
+                const lapTime = formatTime(totalMilliseconds);
+                const lapItem = document.createElement('div');
+                lapItem.textContent = lapTime;
+                lapsDiv.appendChild(lapItem);
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            isRunning = false;
+            totalMilliseconds = 0;
+            startStopBtn.textContent = 'Start';
+            resetHands();
+            lapsDiv.innerHTML = '';
+        });
+
+        function updateStopwatch(currentTime) {
+            if (!isRunning) return;
+
+            totalMilliseconds = currentTime - startTime; // Calculate total elapsed time
+
+            const minutes = Math.floor((totalMilliseconds % 3600000) / 60000);
+            const seconds = Math.floor((totalMilliseconds % 60000) / 1000);
+            const milliseconds = totalMilliseconds % 1000;
+
+            // Update the minute hand
+            minuteHand.style.transform = `translateX(-50%) rotate(${(minutes * 6) + (seconds / 10)}deg)`;
+            // Update the second hand to move smoothly
+            secondHand.style.transform = `translateX(-50%) rotate(${(seconds * 1000 + milliseconds) * 360 / 60000}deg)`;
+
+            requestAnimationFrame(updateStopwatch); // Request next frame
+        }
+
+        function formatTime(totalMilliseconds) {
+            const minutes = String(Math.floor((totalMilliseconds % 3600000) / 60000)).padStart(2, '0');
+            const seconds = String(Math.floor((totalMilliseconds % 60000) / 1000)).padStart(2, '0');
+            const milliseconds = String(Math.floor((totalMilliseconds % 1000) / 10)).padStart(2, '0');
+            return `${minutes}:${seconds}.${milliseconds}`;
+        }
+
+        function resetHands() {
+            minuteHand.style.transform = 'translateX(-50%) rotate(0deg)';
+            secondHand.style.transform = 'translateX(-50%) rotate(0deg)';
+        }
+    </script>
+</body>
+</html>
