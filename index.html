@@ -66,7 +66,7 @@
         }
 
         .big-tick {
-            height: 20px; /* Larger for 5-second intervals */
+            width: 5px;
             background: #000;
         }
 
@@ -114,7 +114,7 @@
                     tick.className = 'tick';
                     tick.style.transform = `translateX(-50%) rotate(${i * 6}deg) translateY(-140px)`; // Position at the outer edge
                     if (i % 5 === 0) {
-                        tick.classList.add('big-tick');
+                        tick.classList.add('big-tick'); // Add big-tick class for every 5 seconds
                     }
                     dial.appendChild(tick);
                 }
